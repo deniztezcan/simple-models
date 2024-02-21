@@ -42,16 +42,41 @@ class Model
             $this->query_text = $string;
         }
     }
+    public function count(): self
+    {
+        $this->appendQuery("SELECT COUNT(*)");
+
+        $select_arguments = "";
+        $select_arguments = ltrim($select_arguments, ",");
+        $this->appendQuery($select_arguments);
+
+        $this->appendQuery("FROM");
+        $this->appendQuery("".$this->table."");
+        return $this;
+    }
+    public function sum(string $name): self
+    {
+        $this->appendQuery("SELECT SUM($name)");
+
+        $select_arguments = "";
+        $select_arguments = ltrim($select_arguments, ",");
+        $this->appendQuery($select_arguments);
+
+        $this->appendQuery("FROM");
+        $this->appendQuery("".$this->table."");
+        return $this;
+    }
 
     public function where(
         string $name, 
+        string $operator = '=', 
         string $value
     ): self
     {
         if(strpos($this->query_text, 'WHERE') !== false) {
-            $this->appendQuery("AND ".$name." = ?");
+            $this->appendQuery("AND ".$name." ".$operator." ?");
         }else{
-            $this->appendQuery("WHERE ".$name." = ?");
+            $this->appendQuery("WHERE ".$name." ".$operator." ?");
         }
          $this->parameters->set(uniqid(), array(gettype($value), $value));
         return $this;
@@ -60,6 +85,22 @@ class Model
     public function select(...$args): self
     {
         $this->appendQuery("SELECT");
+
+        $select_arguments = "";
+        foreach($args as $arg) {
+            $select_arguments.= ", ".$arg;
+        }
+        $select_arguments = ltrim($select_arguments, ",");
+        $this->appendQuery($select_arguments);
+
+        $this->appendQuery("FROM");
+        $this->appendQuery("".$this->table."");
+        return $this;
+    }
+
+    public function selectDistinct(...$args): self
+    {
+        $this->appendQuery("SELECT DISTINCT");
 
         $select_arguments = "";
         foreach($args as $arg) {
